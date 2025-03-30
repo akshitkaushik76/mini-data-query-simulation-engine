@@ -1,5 +1,8 @@
-const Groq = require("groq-sdk");
 require("dotenv").config();
+const Groq = require("groq-sdk");
+const {Parser} = require("node-sql-parser");
+console.log("api_key",process.env.GROQ_API_KEY)
+
 const groq  = new Groq({apiKey:"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"});
 exports.getChatResp = async(req,res,next) =>{
     try{
@@ -43,3 +46,27 @@ exports.explainQuery = async(req,res,next)=>{
     }
     
 }
+
+
+exports.validatepsuedoSQL = async(req,res,next)=>{
+    const {query} = req.body;
+    if(!query) {
+        return res.status(400).json({success:false,message:"No query provided"});
+    }
+    try{
+        const parser = new Parser();
+        const ParsedQuery = parser.astify(query);
+        return res.status(200).json({
+            status:"Success",
+            validSql:true,
+            ParsedQuery,
+            message:"Query is valid SQL",
+        });
+    } catch(error) {
+        return res.status(400).json({
+            status:'fail',
+            validSql:false,
+            message:"invalid SQL query"+error.message,
+        })
+    }
+};
